@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { db } from "../../firebase/firebaseConfig";
-import { ref, onValue, update, set } from "firebase/database";
+import { ref, onValue, update, set, get } from "firebase/database";
 import "./GameView.css";
 import elemental from "../../firebase/elemental";
 
 function GameView() {
   const cardStyle =
-    "flex justify-center items-center cursor-pointer border-2 border-black rounded-md";
+    "flex md:p-6 sm2:p-4 sm1:p-4 justify-center items-center cursor-pointer rounded-[5px] text-base md:text-sm  sm2:text-sm1 sm1:text-sm1 font-display";
   const { id } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const identity = JSON.parse(localStorage.getItem("mail"));
@@ -18,10 +18,11 @@ function GameView() {
   const [cardPlayer1, setCardPlayer1] = useState(null);
   const [cardPlayer2, setCardPlayer2] = useState(null);
   const [playerInRoom, setPlayerInRoom] = useState(null);
-
+  const [uidPlayerInRoom, setUidPlayerInRoom] = useState(null);
   const [status, setStatus] = useState(null);
   const [currentCard, setCurrentCard] = useState(null);
   const [player, setPlayer] = useState("");
+  const [win, setWin] = useState(false);
 
   // สร้างการ์ด
   const createCard = async () => {
@@ -57,6 +58,7 @@ function GameView() {
       if (snapshot.exists() && data !== null) {
         setIsLoading(false);
         setPlayerInRoom([data.player1, data.player2]);
+        setUidPlayerInRoom([data.uidPlayer1, data.uidPlayer2]);
         setStatus(data.status);
         setPlayer(data.currentPlay);
         setBoard(Array.from(data.board));
@@ -76,7 +78,9 @@ function GameView() {
     if (board !== null) {
       if (checkWinner()) {
         // Swal.fire("You win!", "", "success");
+
         setStatus(player + " win!");
+        setWin(true);
       } else {
         if (player === "Player 1") {
           setStatus("Player 2's turn");
@@ -87,7 +91,35 @@ function GameView() {
         }
       }
     }
-  }, [board]);
+  }, [board, cardPlayer1, cardPlayer2]);
+
+  useEffect(() => {
+    if (win) {
+      console.log(" บวกคะแนน");
+      let uidWin =
+        player === "Player 1" ? uidPlayerInRoom[0] : uidPlayerInRoom[1];
+      let mailWin = player === "Player 1" ? playerInRoom[0] : playerInRoom[1];
+      const usersRef = ref(db, "users/" + uidWin);
+      get(usersRef)
+        .then((snapshot) => {
+          const data = snapshot.val();
+          if (data.score == null) {
+            let score = 0;
+            set(usersRef, {
+              email: mailWin,
+              score: score + 1,
+            });
+          }
+          set(usersRef, {
+            email: mailWin,
+            score: data.score + 1,
+          });
+        })
+        .catch((error) => {
+          console.error("Error updating document: ", error);
+        });
+    }
+  }, [win]);
 
   const updateGame = async (
     board,
@@ -209,6 +241,7 @@ function GameView() {
   };
   // //reset เกม
   const resetGame = () => {
+    setWin(false);
     updateGame(
       Array(9).fill({ name: "" }),
       "Player 2",
@@ -265,30 +298,50 @@ function GameView() {
   };
 
   return (
-    <div>
+    <div className="bg-gradient-to-tr from-indigo-800 via-purple-500 to-pink-400">
       {isLoading ? (
         <div>Loading...</div>
       ) : (
-        <div>
-          <h1 className="text-center text-4xl font-bold mt-5">Elemental XO</h1>
-          <h2 className="text-center text-2xl font-bold mt-5">
-            ID for join: {id}
-          </h2>
-          <h2 className="text-center text-2xl font-bold mt-5">
-            Player 1:{playerInRoom[0]}
-          </h2>
-          <h2 className="text-center text-2xl font-bold mt-5">
-            Player 2:
-            {playerInRoom[1] == "" ? "waiting for someone" : playerInRoom[1]}
-          </h2>
-          <h2 className="text-center text-2xl font-bold mt-5">
-            Yor are {identity == playerInRoom[0] ? "Player 1" : "Player 2"}
-          </h2>
-          <h2 className="text-center text-2xl font-bold mt-5">{status}</h2>
-
-          <div className="flex justify-center">
+        <div className="flex flex-col h-screen justify-center gap-5">
+          <div className="flex flex-col justify-center items-center">
+            <h1 className="text-white  md:text-5xl  sm2:text-3xl font-display font-bold drop-shadow-3xl">
+              Elemental XO
+            </h1>
+            <div className="flex gap-3">
+              <h2 className="text-white md:text-base  sm2:text-sm font-display drop-shadow-3xl font-bold">
+                ROOM ID
+              </h2>
+              <h2 className="text-white md:text-base  sm2:text-sm font-display ">{id}</h2>
+            </div>
+          </div>
+          <div className="flex">
+            <div className="flex flex-col flex-1 justify-center items-center gap-3">
+              <h2 className="text-white   md:text-xl  sm2:text-md font-display font-bold drop-shadow-3xl">
+                {status}
+              </h2>
+              <div className="flex flex-col">
+                <div className="flex gap-3">
+                  <h2 className="text-white text-base md:text-base  sm2:text-sm1 font-display">
+                    Player 1
+                  </h2>
+                  <h2 className="text-white text-base md:text-base  sm2:text-sm1 font-display">
+                    {playerInRoom[0]}
+                  </h2>
+                </div>
+                <div className="flex gap-3">
+                  <h2 className="text-white text-base md:text-base sm2:text-sm1 font-display">
+                    Player 2
+                  </h2>
+                  <h2 className="text-white text-base md:text-base  sm2:text-sm1 font-display">
+                    {playerInRoom[1] == ""
+                      ? "waiting for someone"
+                      : playerInRoom[1]}
+                  </h2>
+                </div>
+              </div>
+            </div>
             {/* board tic tac toe */}
-            <div className="board">
+            <div className="board shrink-0 ">
               {board.map((card, index) => {
                 return (
                   <div
@@ -304,14 +357,17 @@ function GameView() {
                   </div>
                 );
               })}
-              <button onClick={resetGame}>Reset</button>
             </div>
+            <div className="flex-1"></div>
           </div>
 
           {/* /////////////////////////////// */}
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center">
+            <h2 className="flex flex-1 justify-center items-center text-white text-xl md:text-base  sm2:text-base font-display">
+              Yor are {identity == playerInRoom[0] ? "Player 1" : "Player 2"}
+            </h2>
             {identity == playerInRoom[0] ? (
-              <div className="board">
+              <div className="board shrink-0">
                 {cardPlayer1.map((card, index) => {
                   return (
                     <div
@@ -320,7 +376,7 @@ function GameView() {
                         card.owner === "Player 1"
                           ? "bg-black text-white"
                           : "bg-white text-black"
-                      } ${card.disabled ? " bg-gray-600" : ""} `}
+                      } ${card.disabled ? " bg-black opacity-75" : ""} `}
                       //disable on click ถ้าไม่ใช่ตาของผู้เล่น
                       onClick={
                         player == "Player 1"
@@ -336,7 +392,7 @@ function GameView() {
                 })}
               </div>
             ) : (
-              <div className="board">
+              <div className="board shrink-0">
                 {cardPlayer2.map((card, index) => {
                   return (
                     <div
@@ -345,7 +401,7 @@ function GameView() {
                         card.owner === "Player 1"
                           ? "bg-black text-white"
                           : "bg-white text-black"
-                      } ${card.disabled ? " bg-gray-600" : ""} `}
+                      } ${card.disabled ? " bg-black opacity-75" : ""} `}
                       //disable on click ถ้าไม่ใช่ตาของผู้เล่น
                       onClick={
                         player == "Player 2"
@@ -361,6 +417,14 @@ function GameView() {
                 })}
               </div>
             )}
+            <div className="flex-1 flex justify-center items-center">
+              <button
+                className="bg-purple-950 text-white p-3 md:px-10 sm2:px-8 md:text-sm  sm2:text-sm1 font-display rounded-[20px] "
+                onClick={resetGame}
+              >
+                Reset
+              </button>
+            </div>
           </div>
         </div>
       )}
