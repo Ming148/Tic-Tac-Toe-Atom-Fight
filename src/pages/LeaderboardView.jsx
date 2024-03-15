@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { ref, onValue } from "firebase/database";
+import { useNavigate} from "react-router-dom";
 import { db } from "../../firebase/firebaseConfig";
 
 function LeaderboardView() {
   const usersRef = ref(db, "users");
   const [users, setUsers] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribe = onValue(usersRef, (snapshot) => {
@@ -24,6 +26,11 @@ function LeaderboardView() {
     return () => unsubscribe();
   }, []);
 
+  const backLobby = () => {
+    navigate("/lobby");
+  }
+
+
   return (
     <div className="bg-gradient-to-tr from-indigo-800 via-purple-500 to-pink-400 h-screen">
         <div className="md:container md:mx-auto flex flex-col h-screen justify-center">
@@ -41,6 +48,14 @@ function LeaderboardView() {
                 </div>
               ))}
             </div>
+          </div>
+          <div className="flex justify-end">
+            <button
+                  className="mt-5 mb-5 text-white tracking-widest text-xl hover:underline drop-shadow-3xl " 
+                  onClick={backLobby}
+                >
+                  Back to lobby
+                </button>
           </div>
         </div>
     </div>

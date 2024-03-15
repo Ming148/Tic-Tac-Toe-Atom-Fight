@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { db } from "../../firebase/firebaseConfig";
 import { ref, onValue, update, set, get } from "firebase/database";
@@ -23,6 +23,8 @@ function GameView() {
   const [currentCard, setCurrentCard] = useState(null);
   const [player, setPlayer] = useState("");
   const [win, setWin] = useState(false);
+  const navigate = useNavigate();
+
 
   // สร้างการ์ด
   const createCard = async () => {
@@ -251,6 +253,10 @@ function GameView() {
     );
   };
 
+  const backLobby = () => {
+    navigate("/lobby");
+  }
+
   // //fucntion ย่อย
 
   const disabledCard = (player, card) => {
@@ -300,12 +306,12 @@ function GameView() {
   return (
     <div className="bg-gradient-to-tr from-indigo-800 via-purple-500 to-pink-400">
       {isLoading ? (
-        <div>Loading...</div>
+        <div className="flex flex-col h-screen justify-center text-white md:text-5xl  sm2:text-3xl font-display font-bold drop-shadow-3xl items-center">Loading. . .</div>
       ) : (
         <div className="flex flex-col h-screen justify-center gap-5">
           <div className="flex flex-col justify-center items-center">
             <h1 className="text-white  md:text-5xl  sm2:text-3xl font-display font-bold drop-shadow-3xl">
-              Elemental XO
+              TicTacToe AtomFight
             </h1>
             <div className="flex gap-3">
               <h2 className="text-white md:text-base  sm2:text-sm font-display drop-shadow-3xl font-bold">
@@ -417,14 +423,21 @@ function GameView() {
                 })}
               </div>
             )}
-            <div className="flex-1 flex justify-center items-center">
+            <div className="flex-1 flex-col flex justify-center items-center">
               <button
                 className="bg-purple-950 text-white p-3 md:px-10 sm2:px-8 md:text-sm  sm2:text-sm1 font-display rounded-[20px] "
                 onClick={resetGame}
               >
                 Reset
               </button>
+              <button
+                className="mt-5 mb-5 text-white tracking-widest text-xl hover:underline drop-shadow-3xl "
+                onClick={backLobby}
+              >
+                Back to lobby
+              </button>
             </div>
+
           </div>
         </div>
       )}

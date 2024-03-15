@@ -50,8 +50,6 @@ function LobbyView() {
       .catch((error) => {
         console.error("Error adding document: ", error);
       });
-
-    navigate("/game");
   };
 
   return (
@@ -86,7 +84,7 @@ function LobbyView() {
           <div className="flex flex-row mt-5 items-center gap-8">
             <h2 className="text-white text-xl font-display tablet:text-base md:text-base sm2:text-base">JoinGame</h2>
             <div className="flex flex-row gap-3">
-              <input type="text" value={roomID} placeholder="Enter Room ID" 
+              <input type="text" value={roomID} placeholder="Enter Room ID"
               className="rounded-[5px] font-display px-3 text-base tablet:text-sm md:text-sm sm2:text-sm"
               onChange={(e) => setRoomID(e.target.value)}/>
               <button onClick={joinGame} className="text-white text-base tablet:text-sm md:text-sm sm2:text-sm bg-black rounded-[5px] font-display px-8 py-2">Join</button>
